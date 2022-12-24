@@ -85,6 +85,7 @@ def train(dataloader, model, loss_fn, optimizer):
             loss, current = loss.item(), batch * len(X)
             print(f"loss: {loss: > 7f} [{current: > 5d}/{size: >5d}]")
         
+
 #evelation
 def test(dataloader, model, loss_fn):
     size = len(dataloader.dataset)
@@ -92,12 +93,21 @@ def test(dataloader, model, loss_fn):
     model.eval()
     test_loss, correct = 0, 0
 
+    save_model = True
     with torch.no_grad():
         for X, y in dataloader:
             X, y = X.to(device), y.to(device)
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+
+            if save_model == True:
+                save_model = False
+
+                print("X: ", X)
+                jit_model = torch.jit.trace(model, (X))
+                print("torchscript model: \n", jit_model)
+                jit_model.save("mnist_model.pt")
 
         test_loss /= num_batches
         correct /= size
